@@ -1,6 +1,6 @@
 ﻿position_id,trader,desk,commodity,instrument,direction,notional_usd,price,volatility_1d,var_95_1d,var_99_1d,delta,status
 P001,John Smith,Crude Oil,Brent Crude,Futures,Long,5000000,82.45,0.021,210000,315000,1.0,Active
-P002,Sarah Jones,Crude Oil,WTI Crude,Futures,Short,3200000,79.20,0.019,120960,181440,−1.0,Active
+P002,Sarah Jones,Crude Oil,WTI Crude,Futures,Short,3200000,79.20,0.019,120960,181440,-1.0,Active
 P003,Mike Chen,Refined Products,Heating Oil,Swap,Long,1800000,2.45,0.025,90000,135000,0.95,Active
 P004,Emma Davis,Refined Products,Gasoline,Options,Long,2500000,2.38,0.031,155000,232500,0.72,Active
 P005,John Smith,Crude Oil,Brent Crude,Options,Short,4100000,82.45,0.021,172200,258300,-0.65,Active

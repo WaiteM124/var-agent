@@ -1,160 +1,178 @@
 from __future__ import annotations
 
-import os
 import json
-import pandas as pd
-from pathlib import Path
-from dotenv import load_dotenv
-from typing import Annotated
+import os
+from typing import Annotated, Any
 
-from langchain_openai import AzureChatOpenAI
+from dotenv import load_dotenv
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage
-from langgraph.graph import StateGraph, END
+from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode
 from typing_extensions import TypedDict
 
-from azure.storage.blob import BlobServiceClient
-from azure.search.documents import SearchClient
-from azure.search.documents.models import VectorizedQuery
-from azure.core.credentials import AzureKeyCredential
-from openai import AzureOpenAI
+from risk.controls import LimitConfig, check_limits
+from risk.portfolio import (
+    DEFAULT_POSITIONS_PATH,
+    aggregate_precomputed_var,
+    filter_positions,
+    load_positions,
+)
 
 load_dotenv()
 
-# ---------- Azure clients ----------
+_df = load_positions(DEFAULT_POSITIONS_PATH)
 
-_azure_openai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
-_azure_openai_key = os.getenv("AZURE_OPENAI_KEY")
-_azure_openai_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
-_azure_openai_api_version = os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01")
+SYSTEM_PROMPT = """You are a risk analyst assistant for an energy trading desk.
+You have access to a synthetic trading book and risk methodology documentation.
+When asked about risk, retrieve the relevant positions first, calculate VaR, and
+check limits. Quote specific position IDs and dollar amounts. Be precise and concise.
+Do not invent figures that a tool did not return."""
 
-_openai = AzureOpenAI(
-    azure_endpoint=_azure_openai_endpoint,
-    api_key=_azure_openai_key,
-    api_version=_azure_openai_api_version,
-)
-
-_storage_connection_string = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-_blob = (
-    BlobServiceClient.from_connection_string(_storage_connection_string)
-    if _storage_connection_string
-    else None
-)
-
-_search = SearchClient(
-    endpoint=os.getenv("AZURE_SEARCH_ENDPOINT"),
-    index_name=os.getenv("AZURE_SEARCH_INDEX", "risk-docs"),
-    credential=AzureKeyCredential(os.getenv("AZURE_SEARCH_KEY")),
-)
-
-_llm = AzureChatOpenAI(
-    azure_endpoint=_azure_openai_endpoint,
-    api_key=_azure_openai_key,
-    azure_deployment=_azure_openai_deployment,
-    api_version=_azure_openai_api_version,
-    temperature=0,
-)
-
-# ---------- Load positions ----------
-
-_positions_path = Path(__file__).parent.parent / "data" / "positions.csv"
-_df = pd.read_csv(_positions_path)
-
-# ---------- Tools ----------
-
-@tool
-def get_positions(trader: str = None, desk: str = None, commodity: str = None) -> str:
-    """Get trading positions. Filter by trader name, desk, or commodity. Leave blank for all positions."""
-    df = _df.copy()
-    if trader:
-        df = df[df["trader"].str.contains(trader, case=False)]
-    if desk:
-        df = df[df["desk"].str.contains(desk, case=False)]
-    if commodity:
-        df = df[df["commodity"].str.contains(commodity, case=False)]
-    return df.to_json(orient="records", indent=2)
-
-
-@tool
-def calculate_portfolio_var(trader: str = None, desk: str = None, confidence: str = "95") -> str:
-    """Calculate portfolio VaR. Aggregates across positions. Confidence level: 95 or 99."""
-    df = _df.copy()
-    if trader:
-        df = df[df["trader"].str.contains(trader, case=False)]
-    if desk:
-        df = df[df["desk"].str.contains(desk, case=False)]
-
-    col = "var_95_1d" if confidence == "95" else "var_99_1d"
-    total_var = df[col].sum()
-    total_notional = df["notional_usd"].sum()
-    var_pct = (total_var / total_notional) * 100
-
-    return json.dumps({
-        "positions_count": int(len(df)),
-        "total_notional_usd": int(total_notional),
-        f"portfolio_var_{confidence}_1d_usd": int(total_var),
-        "var_as_pct_notional": round(float(var_pct), 3),
-        "largest_var_position": str(df.loc[df[col].idxmax(), "position_id"]),
-        "confidence_level": f"{confidence}%"
-    }, indent=2)
-
-
-@tool
-def get_risk_methodology(query: str) -> str:
-    """Retrieve risk methodology documentation. Use for questions about VaR methods, Monte Carlo, trading controls."""
-    embedding = _openai.embeddings.create(
-        model=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-small"),
-        input=query,
-    ).data[0].embedding
-    vq = VectorizedQuery(vector=embedding, k_nearest_neighbors=2, fields="embedding")
-    results = _search.search(search_text=None, vector_queries=[vq], select=["content", "filename"])
-    docs = [r["content"] for r in results]
-    return "\n\n---\n\n".join(docs) if docs else "No relevant documentation found."
-
-
-# ---------- Agent graph ----------
 
 class State(TypedDict):
     messages: Annotated[list, add_messages]
 
 
-tools = [get_positions, calculate_portfolio_var, get_risk_methodology]
-tool_node = ToolNode(tools)
-llm_with_tools = _llm.bind_tools(tools)
+def _azure_clients() -> tuple[Any, Any, Any]:
+    """Create Azure OpenAI and Search clients from the environment.
 
-SYSTEM_PROMPT = """You are a risk analyst assistant for an energy trading desk.
-You have access to live trading position data and risk methodology documentation.
-When asked about risk, always retrieve the relevant positions first, calculate VaR, and explain the results clearly.
-Quote specific position IDs and dollar amounts. Be precise and concise."""
+    Called on the first natural-language query, not at import time, so the
+    deterministic tools and FastAPI demo endpoints can run without credentials.
+    """
+    endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
+    api_key = os.getenv("AZURE_OPENAI_KEY")
+    if not endpoint or not api_key:
+        raise RuntimeError("AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_KEY must be set for /query")
+
+    from azure.core.credentials import AzureKeyCredential
+    from azure.search.documents import SearchClient
+    from langchain_openai import AzureChatOpenAI
+    from openai import AzureOpenAI
+
+    search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
+    search_key = os.getenv("AZURE_SEARCH_KEY")
+    if not search_endpoint or not search_key:
+        raise RuntimeError("AZURE_SEARCH_ENDPOINT and AZURE_SEARCH_KEY must be set for methodology retrieval")
+
+    openai_client = AzureOpenAI(
+        azure_endpoint=endpoint,
+        api_key=api_key,
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01"),
+    )
+    search_client = SearchClient(
+        endpoint=search_endpoint,
+        index_name=os.getenv("AZURE_SEARCH_INDEX", "risk-docs"),
+        credential=AzureKeyCredential(search_key),
+    )
+    llm = AzureChatOpenAI(
+        azure_endpoint=endpoint,
+        api_key=api_key,
+        azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o"),
+        api_version=os.getenv("AZURE_OPENAI_API_VERSION", "2024-02-01"),
+        temperature=0,
+    )
+    return openai_client, search_client, llm
 
 
-def agent_node(state: State):
-    messages = state["messages"]
-    if not any(hasattr(m, "role") and m.role == "system" for m in messages):
-        from langchain_core.messages import SystemMessage
-        messages = [SystemMessage(content=SYSTEM_PROMPT)] + messages
-    response = llm_with_tools.invoke(messages)
-    return {"messages": [response]}
+@tool
+def get_positions(trader: str | None = None, desk: str | None = None, commodity: str | None = None) -> str:
+    """Get trading positions. Filter by trader name, desk, or commodity. Leave blank for all positions."""
+    frame = filter_positions(_df, trader=trader, desk=desk, commodity=commodity)
+    return frame.to_json(orient="records", indent=2)
 
 
-def should_continue(state: State):
-    last = state["messages"][-1]
-    return "tools" if hasattr(last, "tool_calls") and last.tool_calls else END
+@tool
+def calculate_portfolio_var(
+    trader: str | None = None,
+    desk: str | None = None,
+    confidence: str = "95",
+) -> str:
+    """Aggregate pre-computed 1-day VaR across positions. Confidence level: 95 or 99."""
+    frame = filter_positions(_df, trader=trader, desk=desk)
+    return json.dumps(aggregate_precomputed_var(frame, confidence), indent=2)
 
 
-graph = StateGraph(State)
-graph.add_node("agent", agent_node)
-graph.add_node("tools", tool_node)
-graph.set_entry_point("agent")
-graph.add_conditional_edges("agent", should_continue)
-graph.add_edge("tools", "agent")
-app = graph.compile()
+@tool
+def check_trading_controls(
+    trader: str | None = None,
+    desk: str | None = None,
+    commodity: str | None = None,
+) -> str:
+    """Check the selected positions against default notional, VaR, and concentration limits."""
+    frame = filter_positions(_df, trader=trader, desk=desk, commodity=commodity)
+    breaches = check_limits(frame, LimitConfig())
+    return json.dumps(
+        {"breach_count": len(breaches), "breaches": [b.to_dict() for b in breaches]},
+        indent=2,
+    )
+
+
+@tool
+def get_risk_methodology(query: str) -> str:
+    """Retrieve risk methodology documentation (VaR, Monte Carlo, trading controls) from Azure AI Search."""
+    from azure.search.documents.models import VectorizedQuery
+
+    openai_client, search_client, _ = _get_cached_clients()
+    embedding = (
+        openai_client.embeddings.create(
+            model=os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT", "text-embedding-3-small"),
+            input=query,
+        )
+        .data[0]
+        .embedding
+    )
+    vector_query = VectorizedQuery(vector=embedding, k_nearest_neighbors=2, fields="embedding")
+    results = search_client.search(search_text=None, vector_queries=[vector_query], select=["content", "filename"])
+    docs = [row["content"] for row in results]
+    return "\n\n---\n\n".join(docs) if docs else "No relevant documentation found."
+
+
+_CLIENTS: tuple[Any, Any, Any] | None = None
+_GRAPH = None
+
+
+def _get_cached_clients() -> tuple[Any, Any, Any]:
+    global _CLIENTS
+    if _CLIENTS is None:
+        _CLIENTS = _azure_clients()
+    return _CLIENTS
+
+
+tools = [get_positions, calculate_portfolio_var, check_trading_controls, get_risk_methodology]
+
+
+def _build_graph():
+    _, _, llm = _get_cached_clients()
+    llm_with_tools = llm.bind_tools(tools)
+    tool_node = ToolNode(tools)
+
+    def agent_node(state: State):
+        messages = state["messages"]
+        if not any(getattr(m, "type", None) == "system" for m in messages):
+            messages = [SystemMessage(content=SYSTEM_PROMPT)] + list(messages)
+        response = llm_with_tools.invoke(messages)
+        return {"messages": [response]}
+
+    def should_continue(state: State):
+        last = state["messages"][-1]
+        return "tools" if getattr(last, "tool_calls", None) else END
+
+    graph = StateGraph(State)
+    graph.add_node("agent", agent_node)
+    graph.add_node("tools", tool_node)
+    graph.set_entry_point("agent")
+    graph.add_conditional_edges("agent", should_continue)
+    graph.add_edge("tools", "agent")
+    return graph.compile()
 
 
 def query(question: str) -> str:
-    result = app.invoke({"messages": [HumanMessage(content=question)]})
+    global _GRAPH
+    if _GRAPH is None:
+        _GRAPH = _build_graph()
+    result = _GRAPH.invoke({"messages": [HumanMessage(content=question)]})
     return result["messages"][-1].content
 
 
@@ -162,8 +180,8 @@ if __name__ == "__main__":
     questions = [
         "What is the total portfolio VaR at 95% confidence?",
         "Which trader has the highest risk exposure?",
-        "Explain the VaR methodology used and how it applies to our crude oil positions.",
+        "Are any default trading limits breached?",
     ]
-    for q in questions:
-        print(f"\nQ: {q}")
-        print(f"A: {query(q)}\n{'='*60}")
+    for question in questions:
+        print(f"\nQ: {question}")
+        print(f"A: {query(question)}\n{'=' * 60}")

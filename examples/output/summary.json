@@ -1,0 +1,46 @@
+{
+  "book": "data/positions.csv",
+  "positions": 15,
+  "total_notional_usd": 41350000,
+  "assumptions": {
+    "n_paths": 20000,
+    "seed": 42,
+    "correlation": 0.4,
+    "horizon_days": 1,
+    "process": "GBM, zero drift, daily volatility from the book",
+    "options": "delta approximation only"
+  },
+  "precomputed_sum_var_95_usd": 1886960,
+  "precomputed_sum_var_99_usd": 2830440,
+  "undiversified_parametric_var_95_usd": 1552412.85,
+  "undiversified_parametric_var_99_usd": 2195607.12,
+  "monte_carlo_var_95_usd": 970830.57,
+  "monte_carlo_var_99_usd": 1352708.04,
+  "monte_carlo_es_95_usd": 1199973.57,
+  "monte_carlo_es_99_usd": 1515890.47,
+  "pnl_mean_usd": -1461.91,
+  "pnl_std_usd": 591805.91,
+  "limit_breaches": [
+    {
+      "code": "POSITION_NOTIONAL",
+      "message": "Position P010 notional 6,500,000 exceeds 5,000,000",
+      "value": 6500000.0,
+      "limit": 5000000,
+      "context": "P010"
+    },
+    {
+      "code": "TRADER_NOTIONAL",
+      "message": "Trader John Smith notional 15,600,000 exceeds 15,000,000",
+      "value": 15600000.0,
+      "limit": 15000000,
+      "context": "John Smith"
+    },
+    {
+      "code": "DESK_NOTIONAL",
+      "message": "Desk Crude Oil notional 29,600,000 exceeds 25,000,000",
+      "value": 29600000.0,
+      "limit": 25000000,
+      "context": "Crude Oil"
+    }
+  ]
+}
