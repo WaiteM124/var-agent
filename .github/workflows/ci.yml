@@ -1,3 +1,16 @@
+# Lint, test, and re-run the worked Monte Carlo example.
+#
+# Assumptions:
+# - Python 3.12, matching CI history and the public README badge path.
+# - ruff is pinned in pyproject.toml [project.optional-dependencies] dev
+#   (same pin installed below for an explicit lint toolchain).
+# - Tests under tests/ are deterministic and do not call Azure or an LLM.
+# - examples/run_var_example.py is seeded and needs only matplotlib (in [dev]).
+# - There is no LLM / agent eval suite; no eval-gate job. A future Azure-backed
+#   agent eval should be manual or scheduled (credentials, cost, non-determinism),
+#   not a blocking PR check. See AGENTS.md.
+# - This workflow does not deploy and does not use repository secrets.
+
 name: ci
 
 on:
@@ -6,21 +19,31 @@ on:
   pull_request:
 
 jobs:
-  test:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install
-        run: pip install -e ".[dev]"
-      - name: Lint
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          # Explicit pin (must match pyproject.toml) so the lint toolchain is obvious in logs.
+          pip install "ruff==0.17.6"
+
+      - name: Lint with ruff
         run: |
           ruff check .
           ruff format --check .
-      - name: Tests
+
+      - name: Run tests
         run: pytest -q
+
       - name: Worked example
         run: python examples/run_var_example.py

@@ -1,0 +1,15 @@
+---
+description: Non-negotiable VaR Agent product and contribution principles
+alwaysApply: true
+---
+
+# VaR Agent core principles
+
+Canonical detail: `AGENTS.md`.
+
+- **Risk numbers from deterministic code only.** VaR, ES, aggregations, and limit breaches live in `risk/` (and FastAPI routes that call it). The LLM may quote tool output; it must not invent figures.
+- **Keep VaR figures distinct.** Pre-computed CSV sum, undiversified parametric, and Monte Carlo are different estimators — do not conflate them.
+- **Synthetic demo.** Not for real trading decisions. Controls are illustrative, not a pre-trade OMS.
+- **Azure only on the agent path.** Offline core, tests, and the worked example must keep working without credentials.
+- **Do not weaken tests** to green CI. Keep PRs small and scoped. No secrets in the repo.
+- Prefer matching existing patterns. State assumptions in the PR. When rules conflict, `AGENTS.md` wins.
