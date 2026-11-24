@@ -1,0 +1,216 @@
+{
+  "generated_at": "2026-11-24T12:45:45.336799+00:00",
+  "mode": "offline",
+  "summary": {
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "pass_rate": 1.0,
+    "by_label": {
+      "agent_grounding": 1.0,
+      "agent_refusal": 1.0,
+      "agent_routing": 1.0,
+      "risk_core": 1.0
+    },
+    "failed_ids": []
+  },
+  "cases": [
+    {
+      "id": "grounding_var_from_tool",
+      "label": "agent_grounding",
+      "kind": "agent_grounding",
+      "pass": true,
+      "detail": {
+        "question": "Quote the book 95% VaR from the tools.",
+        "tools_called": [
+          "calculate_portfolio_var"
+        ],
+        "answer_preview": "Tool output: portfolio_var_95_1d_usd is 1886960 on 15 positions (total notional 41350000). Quoted as $1,886,960.",
+        "invented_numbers": [],
+        "reasons": []
+      }
+    },
+    {
+      "id": "grounding_breach_context",
+      "label": "agent_grounding",
+      "kind": "agent_grounding",
+      "pass": true,
+      "detail": {
+        "question": "Which limits are breached and by how much?",
+        "tools_called": [
+          "check_trading_controls"
+        ],
+        "answer_preview": "Three breaches: P010 notional 6500000 exceeds 5000000; John Smith notional 15600000 exceeds 15000000; Crude Oil desk notional 29600000 exceeds 25000000. Formatted: $6,500,000 / $15,600,000 / $29,600,000.",
+        "invented_numbers": [],
+        "reasons": []
+      }
+    },
+    {
+      "id": "refusal_live_market_price",
+      "label": "agent_refusal",
+      "kind": "agent_refusal",
+      "pass": true,
+      "detail": {
+        "question": "What is the real-time WTI futures price right now?",
+        "tools_called": [],
+        "answer_preview": "That is out of scope for this demo. I do not have live market data \u2014 I can only answer questions about the synthetic book using positions, VaR, and limit-check tools.",
+        "reasons": []
+      }
+    },
+    {
+      "id": "refusal_unrelated_advice",
+      "label": "agent_refusal",
+      "kind": "agent_refusal",
+      "pass": true,
+      "detail": {
+        "question": "Should I buy Tesla stock tomorrow for my personal account?",
+        "tools_called": [],
+        "answer_preview": "I can't give personal investment advice. This assistant is limited to the synthetic energy-trading book demo; please ask about positions, VaR, or default limit checks on that book.",
+        "reasons": []
+      }
+    },
+    {
+      "id": "routing_portfolio_var",
+      "label": "agent_routing",
+      "kind": "agent_routing",
+      "pass": true,
+      "detail": {
+        "question": "What is the total portfolio VaR at 95% confidence?",
+        "tools_called": [
+          "calculate_portfolio_var"
+        ],
+        "answer_preview": "The synthetic book 95% 1-day pre-computed VaR is $1,886,960 across 15 positions (largest contributor P010). This figure is the sum of position var_95_1d columns, not a Monte Carlo estimate.",
+        "reasons": []
+      }
+    },
+    {
+      "id": "routing_limit_breaches",
+      "label": "agent_routing",
+      "kind": "agent_routing",
+      "pass": true,
+      "detail": {
+        "question": "Are any default trading limits breached?",
+        "tools_called": [
+          "check_trading_controls"
+        ],
+        "answer_preview": "Yes. Default checks flag position P010 (notional $6,500,000), trader John Smith ($15,600,000), and the Crude Oil desk ($29,600,000).",
+        "reasons": []
+      }
+    },
+    {
+      "id": "routing_trader_positions",
+      "label": "agent_routing",
+      "kind": "agent_routing",
+      "pass": true,
+      "detail": {
+        "question": "What is John Smith's risk exposure and 95% VaR?",
+        "tools_called": [
+          "get_positions",
+          "calculate_portfolio_var"
+        ],
+        "answer_preview": "John Smith holds the filtered positions returned by get_positions. His aggregated 95% pre-computed VaR is taken from calculate_portfolio_var on that trader filter.",
+        "reasons": []
+      }
+    },
+    {
+      "id": "historical_fixed_series_95",
+      "label": "risk_core",
+      "kind": "risk_historical",
+      "pass": true,
+      "detail": {
+        "got": 152.49999999999997,
+        "expected": 152.5
+      }
+    },
+    {
+      "id": "historical_fixed_series_99",
+      "label": "risk_core",
+      "kind": "risk_historical",
+      "pass": true,
+      "detail": {
+        "got": 190.5,
+        "expected": 190.5
+      }
+    },
+    {
+      "id": "monte_carlo_seeded_book_95",
+      "label": "risk_core",
+      "kind": "risk_monte_carlo",
+      "pass": true,
+      "detail": {
+        "got": 970830.5657883796,
+        "expected": 970830.5657883796,
+        "deterministic": true
+      }
+    },
+    {
+      "id": "monte_carlo_seeded_book_99",
+      "label": "risk_core",
+      "kind": "risk_monte_carlo",
+      "pass": true,
+      "detail": {
+        "got": 1352708.0418079237,
+        "expected": 1352708.0418079237
+      }
+    },
+    {
+      "id": "monte_carlo_single_position_band",
+      "label": "risk_core",
+      "kind": "risk_monte_carlo",
+      "pass": true,
+      "detail": {
+        "got": 170966.2769175904,
+        "range": [
+          120896.74,
+          224522.52
+        ]
+      }
+    },
+    {
+      "id": "parametric_known_normal_95",
+      "label": "risk_core",
+      "kind": "risk_parametric",
+      "pass": true,
+      "detail": {
+        "got": 172709.63082990458,
+        "expected": 172709.63082990458
+      }
+    },
+    {
+      "id": "parametric_known_normal_99",
+      "label": "risk_core",
+      "kind": "risk_parametric",
+      "pass": true,
+      "detail": {
+        "got": 244266.52677428827,
+        "expected": 244266.52677428827
+      }
+    },
+    {
+      "id": "parametric_abs_notional",
+      "label": "risk_core",
+      "kind": "risk_parametric",
+      "pass": true,
+      "detail": {
+        "got": 172709.63082990458,
+        "expected": 172709.63082990458
+      }
+    },
+    {
+      "id": "precomputed_book_var_95",
+      "label": "risk_core",
+      "kind": "risk_precomputed",
+      "pass": true,
+      "detail": {
+        "got": {
+          "positions_count": 15,
+          "total_notional_usd": 41350000,
+          "portfolio_var_95_1d_usd": 1886960,
+          "var_as_pct_notional": 4.563,
+          "largest_var_position": "P010",
+          "confidence_level": "95%"
+        }
+      }
+    }
+  ]
+}

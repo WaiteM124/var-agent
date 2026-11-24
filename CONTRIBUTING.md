@@ -40,9 +40,10 @@ ruff check .
 ruff format --check .
 pytest -q
 python examples/run_var_example.py
+python evals/run_evals.py
 ```
 
-There is no LLM eval suite. CI requires lint, pytest, and the worked example on every PR.
+CI requires lint, pytest, the worked example, and the offline **eval-gate** on every PR. Optional live Azure smoke: Actions → `eval-live` → Run workflow (needs secrets; see `AGENTS.md`).
 
 ## Branch and PR conventions
 

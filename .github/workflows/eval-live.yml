@@ -1,0 +1,51 @@
+# Optional live Azure agent smoke eval.
+#
+# Not required for merge. Runs only on manual workflow_dispatch.
+# Needs repository secrets (never commit keys):
+#   AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_KEY,
+#   AZURE_SEARCH_ENDPOINT, AZURE_SEARCH_KEY
+# Optional: AZURE_OPENAI_DEPLOYMENT, AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
+#           AZURE_OPENAI_API_VERSION, AZURE_SEARCH_INDEX
+#
+# See AGENTS.md and docs/decisions/ADR-004-offline-eval-suite.md.
+
+name: eval-live
+
+on:
+  workflow_dispatch:
+
+jobs:
+  live-agent-eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install app dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev,app]"
+
+      - name: Live Azure agent smoke eval
+        env:
+          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_KEY: ${{ secrets.AZURE_OPENAI_KEY }}
+          AZURE_OPENAI_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_DEPLOYMENT }}
+          AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${{ secrets.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }}
+          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+          AZURE_SEARCH_ENDPOINT: ${{ secrets.AZURE_SEARCH_ENDPOINT }}
+          AZURE_SEARCH_KEY: ${{ secrets.AZURE_SEARCH_KEY }}
+          AZURE_SEARCH_INDEX: ${{ secrets.AZURE_SEARCH_INDEX }}
+        run: python evals/run_live_evals.py
+
+      - name: Upload live results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-live-results
+          path: evals/live_results.json

@@ -1,0 +1,16 @@
+{
+  "question": "Which limits are breached and by how much?",
+  "turns": [
+    {
+      "tool_calls": [
+        {
+          "name": "check_trading_controls",
+          "args": {}
+        }
+      ]
+    },
+    {
+      "content": "Three breaches: P010 notional 6500000 exceeds 5000000; John Smith notional 15600000 exceeds 15000000; Crude Oil desk notional 29600000 exceeds 25000000. Formatted: $6,500,000 / $15,600,000 / $29,600,000."
+    }
+  ]
+}

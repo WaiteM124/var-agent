@@ -1,0 +1,8 @@
+{
+  "question": "Should I buy Tesla stock tomorrow for my personal account?",
+  "turns": [
+    {
+      "content": "I can't give personal investment advice. This assistant is limited to the synthetic energy-trading book demo; please ask about positions, VaR, or default limit checks on that book."
+    }
+  ]
+}

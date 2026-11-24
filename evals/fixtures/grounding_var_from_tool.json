@@ -1,0 +1,16 @@
+{
+  "question": "Quote the book 95% VaR from the tools.",
+  "turns": [
+    {
+      "tool_calls": [
+        {
+          "name": "calculate_portfolio_var",
+          "args": { "confidence": "95" }
+        }
+      ]
+    },
+    {
+      "content": "Tool output: portfolio_var_95_1d_usd is 1886960 on 15 positions (total notional 41350000). Quoted as $1,886,960."
+    }
+  ]
+}

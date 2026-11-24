@@ -1,0 +1,18 @@
+[
+  {
+    "id": "precomputed_book_var_95",
+    "label": "risk_core",
+    "kind": "risk_precomputed",
+    "description": "Agent tool path: sum of pre-computed var_95_1d on the full synthetic book.",
+    "inputs": {
+      "confidence": 95
+    },
+    "expect": {
+      "positions_count": 15,
+      "total_notional_usd": 41350000,
+      "portfolio_var_95_1d_usd": 1886960,
+      "largest_var_position": "P010",
+      "confidence_level": "95%"
+    }
+  }
+]

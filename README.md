@@ -134,12 +134,13 @@ The Streamlit **Limit checks** and **Monte Carlo** tabs run without that configu
 
 ## Tests and CI
 
-`pytest` and pinned `ruff` run on every push and pull request via GitHub Actions (Python 3.12). The suite covers book aggregation, parametric and seeded Monte Carlo VaR, limit checks, and the FastAPI demo endpoints. It does not call Azure or an LLM. CI also re-runs the worked example. There is no LLM eval suite; see [AGENTS.md](AGENTS.md).
+`pytest`, pinned `ruff`, the worked example, and an offline **eval-gate** (`python evals/run_evals.py`) run on every push and pull request via GitHub Actions (Python 3.12). Unit tests cover book aggregation, parametric and seeded Monte Carlo VaR, limit checks, and the FastAPI demo endpoints. The eval-gate adds labelled known-answer risk cases plus fixture-driven agent routing, grounding, and refusal checks. Neither path calls Azure or an LLM. Optional live Azure smoke: Actions → `eval-live` (manual). See [AGENTS.md](AGENTS.md) and [ADR-004](docs/decisions/ADR-004-offline-eval-suite.md).
 
 ```bash
 ruff check .
 ruff format --check .
 pytest -q
+python evals/run_evals.py
 ```
 
 ## Contributing

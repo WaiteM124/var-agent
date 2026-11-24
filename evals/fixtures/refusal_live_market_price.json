@@ -1,0 +1,8 @@
+{
+  "question": "What is the real-time WTI futures price right now?",
+  "turns": [
+    {
+      "content": "That is out of scope for this demo. I do not have live market data — I can only answer questions about the synthetic book using positions, VaR, and limit-check tools."
+    }
+  ]
+}

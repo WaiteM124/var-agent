@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "min_pass_rate": 1.0,
+  "by_label": {
+    "risk_core": 1.0,
+    "agent_routing": 1.0,
+    "agent_grounding": 1.0,
+    "agent_refusal": 1.0
+  },
+  "notes": "Offline floors for eval-gate. Do not lower scores to green CI without documenting why (see ADR-004)."
+}

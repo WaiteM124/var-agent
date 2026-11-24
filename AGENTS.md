@@ -21,7 +21,9 @@ Single source of truth for humans and AI agents (including Cursor) working in th
 | `docs/decisions/` | Architecture decision records |
 | `examples/run_var_example.py` | Seeded worked Monte Carlo example (no cloud); writes `examples/output/` |
 | `tests/` | Known-answer tests for book aggregation, VaR, limits, and FastAPI demo endpoints |
-| `.github/workflows/ci.yml` | PR/push CI: pinned ruff + pytest + worked example |
+| `evals/` | Offline labelled eval suite (`cases/`, `run_evals.py`, `baseline.json`, `results.json`) |
+| `.github/workflows/ci.yml` | PR/push CI: pinned ruff + pytest + worked example + **eval-gate** |
+| `.github/workflows/eval-live.yml` | Optional manual Azure agent smoke eval (`workflow_dispatch` only) |
 
 Stack: **Python 3.11+** (CI uses 3.12), pandas, NumPy, pytest, ruff, FastAPI, LangGraph, Azure OpenAI, Azure AI Search, Streamlit. Deterministic core, tests, and the worked example need **no cloud credentials**.
 
@@ -45,7 +47,7 @@ Stack: **Python 3.11+** (CI uses 3.12), pandas, NumPy, pytest, ruff, FastAPI, La
 - **No secrets in git.** Use `.env` (gitignored) or a secret manager. Never commit API keys, credentials, connection strings, or private keys. Prefer `.env.example` for documentation. Do not put secrets in git remotes or CI logs.
 - **Pin versions for production-bound work.** Prefer pinned dependency and model / deployment names (`AZURE_OPENAI_DEPLOYMENT`, embedding deployment, API version) when hardening; do not silently bump models in a feature PR. CI pins `ruff`.
 - **Structured logging.** Prefer structured / contextual logs when adding observability; never log secrets or bearer tokens. (This PoC is light on logging today — follow this when extending.)
-- **Evaluate AI / LLM output; never trust blindly.** Agent answers must be grounded in tool results. There is no automated LLM eval suite yet; do not claim evaluated agent quality without measured evidence. Deterministic risk maths are covered by pytest and the worked example.
+- **Evaluate AI / LLM output; never trust blindly.** Agent answers must be grounded in tool results. The offline suite in `evals/` gates routing, grounding, and refusal with fixture LLM turns (no Azure). Do not claim live Azure agent quality from the offline gate alone; use `eval-live.yml` for a credentialed smoke check.
 - **Docs track behaviour.** Update README / ADRs / this file when behaviour, contracts, or run instructions change. Do not invent features or numbers in docs.
 
 ### Definition of done
@@ -53,7 +55,7 @@ Stack: **Python 3.11+** (CI uses 3.12), pandas, NumPy, pytest, ruff, FastAPI, La
 - [ ] Principles above respected (especially deterministic risk numbers; distinct VaR figures; offline core)
 - [ ] Types and boundary contracts in place where APIs change
 - [ ] Tests added or updated; known-answer cases for risk maths / limits
-- [ ] Lint and tests pass (`ruff` + `pytest`; CI equivalents)
+- [ ] Lint, tests, and offline eval-gate pass (`ruff` + `pytest` + `python evals/run_evals.py`)
 - [ ] No secrets introduced
 - [ ] Docs updated if behaviour or workflow changed
 
@@ -104,9 +106,23 @@ ruff check .
 ruff format --check .
 pytest -q
 python examples/run_var_example.py   # also run in CI
+python evals/run_evals.py            # offline eval-gate; writes evals/results.json
 ```
 
-There is **no** LLM / agent eval suite in this repository. CI therefore has no eval-gate job: the deterministic pytest suite and worked example are cheap, seeded, and required on every PR. An Azure-backed agent eval should be added later as a **manual or scheduled** check (needs credentials, non-deterministic, cost), not as a blocking PR job.
+### Offline eval-gate (required on every PR)
+
+`evals/run_evals.py` loads labelled cases from `evals/cases/`, writes `evals/results.json`, and exits non-zero if any pass-rate drops below `evals/baseline.json`. It covers:
+
+- **risk_core** — parametric VaR vs analytic normals, historical VaR on a pinned P&L series, seeded Monte Carlo within tolerance, pre-computed book aggregation
+- **agent_routing** — fixture LLM turns must call the expected `risk/`-backed tools
+- **agent_grounding** — material numbers in answers must appear in tool outputs (no invented figures)
+- **agent_refusal** — out-of-scope questions defer with no tool calls and no invented dollars
+
+No Azure keys. Tool behaviour is exercised by calling the same `risk/` functions the LangGraph tools wrap (see ADR-004).
+
+### Live Azure eval (optional, not required)
+
+`.github/workflows/eval-live.yml` runs only on **manual** `workflow_dispatch`. It installs `[app]`, reads Azure secrets from GitHub Actions, and runs `python evals/run_live_evals.py`. Configure repository secrets: `AZURE_OPENAI_ENDPOINT`, `AZURE_OPENAI_KEY`, `AZURE_SEARCH_ENDPOINT`, `AZURE_SEARCH_KEY` (plus optional deployment / index overrides). Locally: set the same env vars from `.env`, then `pip install -e ".[dev,app]" && python evals/run_live_evals.py`.
 
 ---
 

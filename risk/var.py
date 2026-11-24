@@ -115,6 +115,15 @@ def var_from_pnl(pnl: np.ndarray, confidence: int | str = 95) -> float:
     return float(-np.quantile(pnl, alpha))
 
 
+def historical_var(pnl: np.ndarray | list[float], confidence: int | str = 95) -> float:
+    """Historical VaR from a fixed P&L series (positive loss number).
+
+    This is the empirical quantile of the supplied path — the same estimator as
+    ``var_from_pnl``. Use a pinned series in tests/evals so the answer is analytic.
+    """
+    return var_from_pnl(np.asarray(pnl, dtype=float), confidence)
+
+
 def expected_shortfall(pnl: np.ndarray, confidence: int | str = 95) -> float:
     """Expected Shortfall (CVaR): mean loss in the tail beyond VaR, positive."""
     var = var_from_pnl(pnl, confidence)
