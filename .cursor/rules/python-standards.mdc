@@ -1,0 +1,15 @@
+---
+description: Python engineering standards for risk, agent, API, and tests
+globs: "**/*.py"
+alwaysApply: false
+---
+
+# Python standards
+
+Canonical detail: `AGENTS.md`.
+
+- Target **Python 3.11+** (CI: 3.12). Type hints on public APIs; **Pydantic v2** models at FastAPI request/response boundaries.
+- Put risk maths in `risk/`. Keep `agent/` as a thin LangGraph + tool layer over those functions. Lazy-import / lazy-construct Azure clients so import and demo routes stay offline-safe.
+- Prefer known-answer tests under `tests/` for book totals, parametric/MC VaR, limit breaches, and API demo endpoints. Do not call Azure or an LLM from tests.
+- Before finishing: `ruff check .`, `ruff format --check .`, and `pytest -q` (CI also runs `examples/run_var_example.py`).
+- Do not mass-reformat unrelated files. Do not bump dependency or Azure deployment / model versions unless the task asks for it. Never log secrets.

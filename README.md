@@ -134,13 +134,17 @@ The Streamlit **Limit checks** and **Monte Carlo** tabs run without that configu
 
 ## Tests and CI
 
-`pytest` and `ruff` run on every push via GitHub Actions (Python 3.12). The suite covers book aggregation, parametric and seeded Monte Carlo VaR, limit checks, and the FastAPI demo endpoints. It does not call Azure or an LLM. CI also re-runs the worked example.
+`pytest` and pinned `ruff` run on every push and pull request via GitHub Actions (Python 3.12). The suite covers book aggregation, parametric and seeded Monte Carlo VaR, limit checks, and the FastAPI demo endpoints. It does not call Azure or an LLM. CI also re-runs the worked example. There is no LLM eval suite; see [AGENTS.md](AGENTS.md).
 
 ```bash
 ruff check .
 ruff format --check .
 pytest -q
 ```
+
+## Contributing
+
+Human setup, PR conventions, and definition of done: [CONTRIBUTING.md](CONTRIBUTING.md). Agents (including Cursor) should treat [AGENTS.md](AGENTS.md) as the source of truth. Decision records live under [docs/decisions/](docs/decisions/).
 
 ## Status
 
