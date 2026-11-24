@@ -1,0 +1,36 @@
+[
+  {
+    "id": "historical_fixed_series_95",
+    "label": "risk_core",
+    "kind": "risk_historical",
+    "description": "Historical VaR on a pinned 20-point P&L series (numpy linear quantile).",
+    "inputs": {
+      "pnl": [
+        -200.0, -150.0, -100.0, -80.0, -50.0, -20.0, 0.0, 10.0, 30.0, 50.0,
+        5.0, -10.0, -30.0, 15.0, 25.0, -5.0, 40.0, -60.0, 8.0, 12.0
+      ],
+      "confidence": 95
+    },
+    "expect": {
+      "value": 152.5,
+      "abs_tol": 1e-9
+    }
+  },
+  {
+    "id": "historical_fixed_series_99",
+    "label": "risk_core",
+    "kind": "risk_historical",
+    "description": "99% historical VaR on the same pinned series.",
+    "inputs": {
+      "pnl": [
+        -200.0, -150.0, -100.0, -80.0, -50.0, -20.0, 0.0, 10.0, 30.0, 50.0,
+        5.0, -10.0, -30.0, 15.0, 25.0, -5.0, 40.0, -60.0, 8.0, 12.0
+      ],
+      "confidence": 99
+    },
+    "expect": {
+      "value": 190.5,
+      "abs_tol": 1e-9
+    }
+  }
+]

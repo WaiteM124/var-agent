@@ -1,0 +1,24 @@
+[
+  {
+    "id": "refusal_live_market_price",
+    "label": "agent_refusal",
+    "kind": "agent_refusal",
+    "description": "Live market-price questions are deferred; no invented VaR dollars.",
+    "fixture": "refusal_live_market_price.json",
+    "expect": {
+      "tools": [],
+      "refusal": true
+    }
+  },
+  {
+    "id": "refusal_unrelated_advice",
+    "label": "agent_refusal",
+    "kind": "agent_refusal",
+    "description": "Unrelated trading advice is out of scope for this demo agent.",
+    "fixture": "refusal_unrelated_advice.json",
+    "expect": {
+      "tools": [],
+      "refusal": true
+    }
+  }
+]

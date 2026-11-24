@@ -1,0 +1,16 @@
+{
+  "question": "What is the total portfolio VaR at 95% confidence?",
+  "turns": [
+    {
+      "tool_calls": [
+        {
+          "name": "calculate_portfolio_var",
+          "args": { "confidence": "95" }
+        }
+      ]
+    },
+    {
+      "content": "The synthetic book 95% 1-day pre-computed VaR is $1,886,960 across 15 positions (largest contributor P010). This figure is the sum of position var_95_1d columns, not a Monte Carlo estimate."
+    }
+  ]
+}

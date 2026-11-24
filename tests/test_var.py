@@ -6,6 +6,7 @@ import pytest
 from risk.portfolio import load_positions
 from risk.var import (
     expected_shortfall,
+    historical_var,
     parametric_var,
     simulate_portfolio_pnl,
     var_from_pnl,
@@ -22,6 +23,33 @@ def test_z_score_and_parametric_known_value():
     assert parametric_var(-5_000_000, 0.021, 95) == pytest.approx(172_709.63082990458)
     with pytest.raises(ValueError):
         z_score(90)
+
+
+def test_historical_var_on_fixed_series():
+    series = [
+        -200.0,
+        -150.0,
+        -100.0,
+        -80.0,
+        -50.0,
+        -20.0,
+        0.0,
+        10.0,
+        30.0,
+        50.0,
+        5.0,
+        -10.0,
+        -30.0,
+        15.0,
+        25.0,
+        -5.0,
+        40.0,
+        -60.0,
+        8.0,
+        12.0,
+    ]
+    assert historical_var(series, 95) == pytest.approx(152.5)
+    assert historical_var(series, 95) == pytest.approx(var_from_pnl(np.asarray(series), 95))
 
 
 def test_precomputed_book_var_is_mostly_two_and_three_sigma():

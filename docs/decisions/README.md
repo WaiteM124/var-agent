@@ -22,3 +22,4 @@ Mark records **reconstructed from code** when the reasoning was not written down
 | [ADR-001](ADR-001-deterministic-risk-core.md) | Deterministic risk core separate from the LLM agent |
 | [ADR-002](ADR-002-lazy-azure-clients.md) | Lazy Azure client construction for the agent path |
 | [ADR-003](ADR-003-precomputed-vs-monte-carlo-var.md) | Pre-computed, parametric, and Monte Carlo VaR as distinct figures |
+| [ADR-004](ADR-004-offline-eval-suite.md) | Offline deterministic eval suite with CI eval-gate |

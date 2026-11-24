@@ -44,7 +44,7 @@ build-backend = "setuptools.build_meta"
 py-modules = ["main", "streamlit_app"]
 
 [tool.setuptools.packages.find]
-include = ["agent*", "risk*"]
+include = ["agent*", "risk*", "evals*"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -53,7 +53,7 @@ testpaths = ["tests"]
 [tool.ruff]
 target-version = "py311"
 line-length = 120
-src = [".", "risk", "tests", "examples", "agent"]
+src = [".", "risk", "tests", "examples", "agent", "evals"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP"]

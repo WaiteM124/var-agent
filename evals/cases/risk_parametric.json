@@ -1,0 +1,47 @@
+[
+  {
+    "id": "parametric_known_normal_95",
+    "label": "risk_core",
+    "kind": "risk_parametric",
+    "description": "Undiversified parametric VaR: |N| * sigma * z_95 for a known normal scale.",
+    "inputs": {
+      "notional": 5000000,
+      "volatility_1d": 0.021,
+      "confidence": 95
+    },
+    "expect": {
+      "value": 172709.63082990458,
+      "abs_tol": 1e-9
+    }
+  },
+  {
+    "id": "parametric_known_normal_99",
+    "label": "risk_core",
+    "kind": "risk_parametric",
+    "description": "Undiversified parametric VaR at 99% for the same notional/vol.",
+    "inputs": {
+      "notional": 5000000,
+      "volatility_1d": 0.021,
+      "confidence": 99
+    },
+    "expect": {
+      "value": 244266.52677428827,
+      "abs_tol": 1e-9
+    }
+  },
+  {
+    "id": "parametric_abs_notional",
+    "label": "risk_core",
+    "kind": "risk_parametric",
+    "description": "Short notionals use absolute exposure for undiversified parametric VaR.",
+    "inputs": {
+      "notional": -5000000,
+      "volatility_1d": 0.021,
+      "confidence": 95
+    },
+    "expect": {
+      "value": 172709.63082990458,
+      "abs_tol": 1e-9
+    }
+  }
+]

@@ -1,0 +1,20 @@
+{
+  "question": "What is John Smith's risk exposure and 95% VaR?",
+  "turns": [
+    {
+      "tool_calls": [
+        {
+          "name": "get_positions",
+          "args": { "trader": "John Smith" }
+        },
+        {
+          "name": "calculate_portfolio_var",
+          "args": { "trader": "John Smith", "confidence": "95" }
+        }
+      ]
+    },
+    {
+      "content": "John Smith holds the filtered positions returned by get_positions. His aggregated 95% pre-computed VaR is taken from calculate_portfolio_var on that trader filter."
+    }
+  ]
+}

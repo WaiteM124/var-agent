@@ -1,0 +1,26 @@
+[
+  {
+    "id": "grounding_var_from_tool",
+    "label": "agent_grounding",
+    "kind": "agent_grounding",
+    "description": "Dollar VaR in the answer must come from calculate_portfolio_var output.",
+    "fixture": "grounding_var_from_tool.json",
+    "expect": {
+      "tools": ["calculate_portfolio_var"],
+      "grounded": true,
+      "must_contain": ["1,886,960", "15"]
+    }
+  },
+  {
+    "id": "grounding_breach_context",
+    "label": "agent_grounding",
+    "kind": "agent_grounding",
+    "description": "Breach notionals and IDs must match check_trading_controls output.",
+    "fixture": "grounding_breach_context.json",
+    "expect": {
+      "tools": ["check_trading_controls"],
+      "grounded": true,
+      "must_contain": ["P010", "6,500,000", "John Smith"]
+    }
+  }
+]

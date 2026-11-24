@@ -1,0 +1,37 @@
+[
+  {
+    "id": "routing_portfolio_var",
+    "label": "agent_routing",
+    "kind": "agent_routing",
+    "description": "Portfolio VaR question routes to calculate_portfolio_var only.",
+    "fixture": "routing_portfolio_var.json",
+    "expect": {
+      "tools": ["calculate_portfolio_var"],
+      "forbid_tools": ["get_risk_methodology"],
+      "must_contain": ["1,886,960"]
+    }
+  },
+  {
+    "id": "routing_limit_breaches",
+    "label": "agent_routing",
+    "kind": "agent_routing",
+    "description": "Limit question routes to check_trading_controls.",
+    "fixture": "routing_limit_breaches.json",
+    "expect": {
+      "tools": ["check_trading_controls"],
+      "forbid_tools": ["get_risk_methodology"],
+      "must_contain": ["P010"]
+    }
+  },
+  {
+    "id": "routing_trader_positions",
+    "label": "agent_routing",
+    "kind": "agent_routing",
+    "description": "Trader exposure question fetches positions then aggregates VaR.",
+    "fixture": "routing_trader_positions.json",
+    "expect": {
+      "tools": ["get_positions", "calculate_portfolio_var"],
+      "forbid_tools": ["get_risk_methodology"]
+    }
+  }
+]

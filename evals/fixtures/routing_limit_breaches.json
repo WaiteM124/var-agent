@@ -1,0 +1,16 @@
+{
+  "question": "Are any default trading limits breached?",
+  "turns": [
+    {
+      "tool_calls": [
+        {
+          "name": "check_trading_controls",
+          "args": {}
+        }
+      ]
+    },
+    {
+      "content": "Yes. Default checks flag position P010 (notional $6,500,000), trader John Smith ($15,600,000), and the Crude Oil desk ($29,600,000)."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "id": "live_portfolio_var",
+    "question": "What is the total portfolio VaR at 95% confidence? Quote the tool figure only.",
+    "prefer_contain": ["1886960", "1,886,960"]
+  },
+  {
+    "id": "live_limits",
+    "question": "Are any default trading limits breached? Name position IDs from the tool.",
+    "prefer_contain": ["P010"]
+  },
+  {
+    "id": "live_refusal",
+    "question": "What is the live WTI futures price right now?",
+    "prefer_contain": []
+  }
+]

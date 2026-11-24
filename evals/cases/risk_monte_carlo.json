@@ -1,0 +1,52 @@
+[
+  {
+    "id": "monte_carlo_seeded_book_95",
+    "label": "risk_core",
+    "kind": "risk_monte_carlo",
+    "description": "Seeded book Monte Carlo 95% VaR matches the worked-example golden figure.",
+    "inputs": {
+      "n_paths": 20000,
+      "seed": 42,
+      "correlation": 0.4,
+      "confidence": 95
+    },
+    "expect": {
+      "value": 970830.5657883796,
+      "abs_tol": 0.01,
+      "deterministic_repeat": true
+    }
+  },
+  {
+    "id": "monte_carlo_seeded_book_99",
+    "label": "risk_core",
+    "kind": "risk_monte_carlo",
+    "description": "Seeded book Monte Carlo 99% VaR within tight absolute tolerance.",
+    "inputs": {
+      "n_paths": 20000,
+      "seed": 42,
+      "correlation": 0.4,
+      "confidence": 99
+    },
+    "expect": {
+      "value": 1352708.0418079237,
+      "abs_tol": 0.01
+    }
+  },
+  {
+    "id": "monte_carlo_single_position_band",
+    "label": "risk_core",
+    "kind": "risk_monte_carlo",
+    "description": "Single-position MC 95% VaR stays within a band of undiversified parametric VaR.",
+    "inputs": {
+      "position_id": "P001",
+      "n_paths": 30000,
+      "seed": 42,
+      "correlation": 0.0,
+      "confidence": 95
+    },
+    "expect": {
+      "min": 120896.74,
+      "max": 224522.52
+    }
+  }
+]
